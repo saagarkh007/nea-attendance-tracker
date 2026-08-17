@@ -718,8 +718,7 @@ function computeDay(y,m,d,entries,holidays){
   if(isWeekend){
     if(entry.workedWeekend || entry.workedSat){
       result.worked = true;
-      const weekendHours = entry.weekendHours ?? entry.satHours;
-      result.otHours = Math.min(parseFloat(weekendHours)||0, settings.satCap);
+      result.otHours = settings.satCap;
     }
     return result;
   }
