@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0F5C6B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<link rel="apple-touch-icon" href="./icons/icon-192.png">
+<title>NEA Attendance & OT Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EEF3F3;
+    --surface:#FFFFFF;
+    --border:#DCE4E4;
+    --ink:#122023;
+    --ink-soft:#5B6E71;
+    --primary:#0F5C6B;
+    --primary-dark:#0B4550;
+    --spark:#F2B705;
+    --spark-dark:#B98600;
+    --holiday:#C0392B;
+    --holiday-bg:#FBE7E4;
+    --leave:#7C5CBF;
+    --leave-bg:#F0EAFB;
+    --ot:#1E8A5F;
+    --ot-bg:#E4F5EC;
+    --warn:#D98C0B;
+    --warn-bg:#FCF1DD;
+    --danger:#C0392B;
+    --sat:#3B5A66;
+    --sat-bg:#E4EDEE;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;padding-bottom:40px;}
+  h1,h2,h3,.display{font-family:'Sora',system-ui,sans-serif;}
+  .wrap{max-width:640px;margin:0 auto;padding:14px 14px 0;}
+  header.top{padding:18px 16px 14px;background:linear-gradient(135deg,var(--primary) 0%,var(--primary-dark) 100%);color:#fff;position:relative;overflow:hidden;}
+  header.top::after{content:"";position:absolute;right:-30px;top:-40px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(242,183,5,0.35),transparent 70%);}
+  header.top .row{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1;}
+  header.top .brand{display:flex;align-items:center;gap:9px;}
+  .bolt{width:26px;height:26px;flex:none;}
+  header.top .brand-text{font-family:'Sora';font-weight:700;font-size:15px;letter-spacing:.2px;}
+  header.top .brand-text small{display:block;font-family:'Inter';font-weight:400;font-size:11px;opacity:.85;}
+  .icon-btn{background:rgba(255,255,255,0.14);border:none;color:#fff;width:34px;height:34px;border-radius:10px;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .icon-btn:active{background:rgba(255,255,255,0.28);}
+  .today-line{margin-top:14px;position:relative;z-index:1;}
+  .today-line .bs-date{font-family:'Sora';font-weight:800;font-size:22px;}
+  .today-line .ad-date{font-size:12.5px;opacity:.85;margin-top:2px;}
+
+  .banner{margin:14px 0 0;padding:12px 14px;border-radius:var(--radius);display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.4;}
+  .banner.reminder{background:var(--warn-bg);border:1px solid #F0D9A6;color:#7A5205;}
+  .banner .b-ico{font-size:18px;}
+  .banner b{display:block;margin-bottom:2px;}
+
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-top:14px;}
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+  .cal-head .nav-btn{width:34px;height:34px;border-radius:10px;border:1px solid var(--border);background:#F5F8F8;font-size:16px;cursor:pointer;}
+  .cal-head .month-title{font-family:'Sora';font-weight:700;font-size:16.5px;text-align:center;cursor:pointer;}
+  .cal-head .month-title small{display:block;font-family:'Inter';font-weight:500;color:var(--ink-soft);font-size:11.5px;}
+  .dow-row{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:11px;color:var(--ink-soft);font-weight:600;margin-bottom:4px;}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .cell{aspect-ratio:1/1;border-radius:10px;border:1px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;font-weight:600;background:#F7F9F9;cursor:pointer;position:relative;color:var(--ink);}
+  .cell.empty{background:transparent;cursor:default;}
+  .cell.sat,.cell.sun{background:var(--sat-bg);color:var(--sat);}
+  .cell.holiday{background:var(--holiday-bg);color:var(--holiday);}
+  .cell.leave{background:var(--leave-bg);color:var(--leave);}
+  .cell.today{outline:2px solid var(--spark);outline-offset:-2px;}
+  .cell .dots{display:flex;gap:2px;margin-top:2px;height:5px;}
+  .dot{width:5px;height:5px;border-radius:50%;}
+  .dot.ot{background:var(--ot);}
+  .dot.late{background:var(--warn);}
+  .dot.work{background:var(--primary);}
+  .legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:11px;color:var(--ink-soft);}
+  .legend span{display:inline-flex;align-items:center;gap:4px;}
+  .legend i{width:9px;height:9px;border-radius:3px;display:inline-block;}
+
+  .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px;}
+  .stat .label{font-size:11px;color:var(--ink-soft);font-weight:600;text-transform:uppercase;letter-spacing:.4px;}
+  .stat .value{font-family:'Sora';font-size:21px;font-weight:700;margin-top:3px;}
+  .stat .sub{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+  .stat.accent{background:var(--ot-bg);border-color:#C7E9D6;}
+  .stat.accent .value{color:var(--ot);}
+
+  .late-card{margin-top:10px;}
+  .late-card .bar-track{height:10px;border-radius:6px;background:#EDEFEF;overflow:hidden;margin-top:8px;}
+  .late-card .bar-fill{height:100%;border-radius:6px;background:var(--warn);transition:width .3s;}
+  .late-card .bar-fill.danger{background:var(--danger);}
+  .late-card .foot{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-soft);margin-top:6px;}
+
+  .quick-actions{display:flex;gap:8px;margin-top:14px;}
+  .qbtn{flex:1;padding:11px 8px;border-radius:12px;border:1px solid var(--border);background:var(--surface);font-size:12.5px;font-weight:600;text-align:center;cursor:pointer;color:var(--ink);}
+  .qbtn.primary{background:var(--primary);color:#fff;border-color:var(--primary);}
+
+  /* Modal */
+  .overlay{position:fixed;inset:0;background:rgba(10,20,22,0.45);display:none;align-items:flex-end;justify-content:center;z-index:50;}
+  .overlay.open{display:flex;}
+  .sheet{background:var(--surface);width:100%;max-width:640px;border-radius:20px 20px 0 0;max-height:92vh;overflow-y:auto;padding:16px 16px 22px;animation:slideup .22s ease;}
+  @keyframes slideup{from{transform:translateY(24px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+  .sheet-handle{width:38px;height:4px;border-radius:3px;background:#DDE3E3;margin:0 auto 12px;}
+  .sheet h2{margin:0 0 2px;font-size:18px;}
+  .sheet .sub-date{font-size:12.5px;color:var(--ink-soft);margin-bottom:14px;}
+  .field-group{margin-bottom:12px;}
+  .field-group label{display:block;font-size:12px;font-weight:600;color:var(--ink-soft);margin-bottom:5px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  input[type=time], input[type=number], input[type=text], select, textarea{
+    width:100%;padding:10px 11px;border-radius:10px;border:1px solid var(--border);font-size:14px;font-family:inherit;background:#FAFCFC;color:var(--ink);
+  }
+  textarea{resize:vertical;min-height:52px;}
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 2px;border-bottom:1px solid #F0F2F2;}
+  .toggle-row:last-child{border-bottom:none;}
+  .toggle-row .t-label{font-size:13.5px;font-weight:600;}
+  .switch{position:relative;width:42px;height:24px;flex:none;}
+  .switch input{opacity:0;width:0;height:0;}
+  .slider{position:absolute;inset:0;background:#DADFDF;border-radius:24px;cursor:pointer;transition:.2s;}
+  .slider:before{content:"";position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;}
+  input:checked + .slider{background:var(--ot);}
+  input:checked + .slider:before{transform:translateX(18px);}
+  .computed{background:#F5F8F8;border-radius:12px;padding:10px 12px;margin:10px 0;font-size:13px;display:flex;flex-wrap:wrap;gap:10px 16px;}
+  .computed .c-item b{display:block;font-size:15px;font-family:'Sora';}
+  .btn-row{display:flex;gap:10px;margin-top:16px;}
+  .btn{flex:1;padding:12px;border-radius:12px;border:none;font-weight:700;font-size:14px;cursor:pointer;}
+  .btn.save{background:var(--primary);color:#fff;}
+  .btn.del{background:#FBEAEA;color:var(--holiday);}
+  .btn.ghost{background:#F0F2F2;color:var(--ink);}
+  .close-x{position:absolute;top:14px;right:14px;background:#F0F2F2;border:none;width:30px;height:30px;border-radius:9px;font-size:15px;cursor:pointer;}
+
+  .holiday-item,.hol-list-item{display:flex;align-items:center;justify-content:space-between;padding:9px 2px;border-bottom:1px solid #F0F2F2;font-size:13px;}
+  .hol-list-item .h-name{font-weight:600;}
+  .hol-list-item .h-date{color:var(--ink-soft);font-size:11.5px;}
+  .rm-btn{background:none;border:none;color:var(--holiday);font-size:13px;font-weight:700;cursor:pointer;}
+  .add-hol-row{display:flex;gap:6px;margin-top:10px;}
+  .add-hol-row input{flex:1;}
+  .small-btn{background:var(--primary);color:#fff;border:none;border-radius:10px;padding:0 14px;font-weight:700;font-size:13px;cursor:pointer;}
+
+  .empty-state{text-align:center;padding:20px 10px;color:var(--ink-soft);font-size:13px;}
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:24px;font-size:13px;z-index:80;opacity:0;pointer-events:none;transition:.25s;}
+  .toast.show{opacity:1;transform:translate(-50%,-6px);}
+  .month-picker-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;}
+  .mp-btn{padding:8px 0;border-radius:9px;border:1px solid var(--border);background:#F5F8F8;font-size:12px;font-weight:600;cursor:pointer;width:calc(25% - 5px);}
+  .mp-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+  footer.note{text-align:center;font-size:11px;color:var(--ink-soft);margin:22px 0 6px;padding:0 20px;line-height:1.5;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="row">
+    <div class="brand">
+      <svg class="bolt" viewBox="0 0 24 24" fill="none"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z" fill="#F2B705"/></svg>
+      <div class="brand-text">NEA Attendance<small>Overtime · Leave · BS Calendar</small></div>
+    </div>
+    <div style="display:flex;gap:6px;align-items:center;"><span id="syncStatus" style="font-size:10px;opacity:.9;">Local</span><button class="icon-btn" id="syncBtn" title="Sync with Google Sheets">↻</button><button class="icon-btn" id="settingsBtn" title="Settings">⚙</button></div>
+  </div>
+  <div class="today-line">
+    <div class="bs-date" id="todayBS">—</div>
+    <div class="ad-date" id="todayAD">—</div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="reminderZone"></div>
+
+  <div class="card">
+    <div class="cal-head">
+      <button class="nav-btn" id="prevMonth">‹</button>
+      <div class="month-title" id="monthTitle">—</div>
+      <button class="nav-btn" id="nextMonth">›</button>
+    </div>
+    <div class="dow-row"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
+    <div class="grid" id="calGrid"></div>
+    <div class="legend">
+      <span><i style="background:var(--ot)"></i>OT logged</span>
+      <span><i style="background:var(--warn)"></i>Late</span>
+      <span><i style="background:var(--holiday-bg);border:1px solid var(--holiday)"></i>Holiday</span>
+      <span><i style="background:var(--leave-bg);border:1px solid var(--leave)"></i>Leave</span>
+      <span><i style="background:var(--sat-bg);border:1px solid var(--sat)"></i>Weekend (Sat &amp; Sun)</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin:0 0 2px;font-size:14.5px;">OT summary — this BS month</h3>
+    <div class="summary-grid">
+      <div class="stat accent">
+        <div class="label">Period 1–15</div>
+        <div class="value" id="otP1">0.0 h</div>
+        <div class="sub" id="subP1">submit on the 15th</div>
+      </div>
+      <div class="stat accent">
+        <div class="label" id="p2Label">Period 16–end</div>
+        <div class="value" id="otP2">0.0 h</div>
+        <div class="sub" id="subP2">submit on the 1st</div>
+      </div>
+    </div>
+
+    <div class="late-card stat">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="label">Late time used this month</div>
+        <b id="lateMinLabel" style="font-family:'Sora';font-size:15px;">0h 0m / 7h</b>
+      </div>
+      <div class="bar-track"><div class="bar-fill" id="lateBar" style="width:0%"></div></div>
+      <div class="foot"><span id="lateNote">On track</span><span id="lateDaysCount">0 late days</span></div>
+    </div>
+
+    <div class="summary-grid">
+      <div class="stat"><div class="label">Leave days</div><div class="value" id="leaveCount">0</div></div>
+      <div class="stat"><div class="label">Holidays worked</div><div class="value" id="holWorked">0</div></div>
+    </div>
+  </div>
+
+  <div class="quick-actions">
+    <div class="qbtn primary" id="manageHolidaysBtn">🗓 Manage holidays</div>
+    <div class="qbtn" id="jumpTodayBtn">📍 Jump to today</div>
+  </div>
+
+  <footer class="note">Times are stored only on this device/account via Claude's artifact storage. BS↔AD conversion covers 2065–2099 BS. Double-check festival dates against the official NEA/Home Ministry notice when it matters for payroll.</footer>
+</div>
+
+<!-- Day detail sheet -->
+<div class="overlay" id="dayOverlay">
+  <div class="sheet">
+    <button class="close-x" id="closeDaySheet">✕</button>
+    <div class="sheet-handle"></div>
+    <h2 id="dayTitle">—</h2>
+    <div class="sub-date" id="daySubtitle">—</div>
+
+    <div id="dayFormNormal">
+      <div class="toggle-row">
+        <div class="t-label">On leave</div>
+        <label class="switch"><input type="checkbox" id="leaveToggle"><span class="slider"></span></label>
+      </div>
+      <div id="leaveTypeWrap" style="display:none;margin-top:8px;">
+        <div class="field-group">
+          <label>Leave type</label>
+          <select id="leaveType">
+            <option>Home leave</option>
+            <option>Sick leave</option>
+            <option>Half day</option>
+            <option>Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="workFieldsWrap">
+        <div class="row2">
+          <div class="field-group">
+            <label>In time</label>
+            <input type="time" id="inTime">
+          </div>
+          <div class="field-group">
+            <label>Out time</label>
+            <input type="time" id="outTime">
+          </div>
+        </div>
+        <div class="computed" id="normalComputed"></div>
+      </div>
+    </div>
+
+    <div id="dayFormWeekend" style="display:none;">
+      <div class="toggle-row">
+        <div class="t-label">Worked this weekend day (OT)</div>
+        <label class="switch"><input type="checkbox" id="weekendToggle"><span class="slider"></span></label>
+      </div>
+      <div class="field-group" style="margin-top:8px;">
+        <label>OT hours worked (max 7)</label>
+        <input type="number" id="weekendHours" min="0" max="7" step="0.5" placeholder="e.g. 7">
+      </div>
+    </div>
+
+    <div id="dayFormHoliday" style="display:none;">
+      <div class="field-group">
+        <label>Holiday name</label>
+        <input type="text" id="holidayNameField" placeholder="e.g. Dashain">
+      </div>
+      <div class="toggle-row">
+        <div class="t-label">I worked this holiday (OT)</div>
+        <label class="switch"><input type="checkbox" id="holWorkToggle"><span class="slider"></span></label>
+      </div>
+      <div class="field-group" style="margin-top:8px;">
+        <label>Hours worked</label>
+        <input type="number" id="holHours" min="0" step="0.5" placeholder="e.g. 4">
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label>Note</label>
+      <textarea id="dayNote" placeholder="Optional note…"></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn del" id="deleteDayBtn">Clear day</button>
+      <button class="btn save" id="saveDayBtn">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Holidays manager sheet -->
+<div class="overlay" id="holOverlay">
+  <div class="sheet">
+    <button class="close-x" id="closeHolSheet">✕</button>
+    <div class="sheet-handle"></div>
+    <h2>Holidays — <span id="holYearLabel"></span> BS</h2>
+    <div class="sub-date">Tap a year's holidays to edit. Government holidays for 2083 BS are pre-loaded; add or remove as needed for your office.</div>
+    <div class="month-picker-row" id="holYearPicker"></div>
+    <div id="holidayListWrap" style="margin-top:12px;"></div>
+    <div class="add-hol-row">
+      <input type="text" id="newHolMonth" placeholder="Month (1-12)" style="max-width:34%;" inputmode="numeric">
+      <input type="text" id="newHolDay" placeholder="Day" style="max-width:26%;" inputmode="numeric">
+      <input type="text" id="newHolName" placeholder="Holiday name">
+      <button class="small-btn" id="addHolBtn">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings sheet -->
+<div class="overlay" id="settingsOverlay">
+  <div class="sheet">
+    <button class="close-x" id="closeSettingsSheet">✕</button>
+    <div class="sheet-handle"></div>
+    <h2>Settings</h2>
+    <div class="sub-date">Duty hours & OT rules — defaults match NEA's standard 9 to 5 policy.</div>
+    <div class="row2">
+      <div class="field-group"><label>Duty start</label><input type="time" id="setDutyStart"></div>
+      <div class="field-group"><label>Duty end</label><input type="time" id="setDutyEnd"></div>
+    </div>
+    <div class="row2">
+      <div class="field-group"><label>Weekday OT cap — before duty (min)</label><input type="number" id="setEarlyCap"></div>
+      <div class="field-group"><label>Weekday OT cap — after duty (min)</label><input type="number" id="setLateCap"></div>
+    </div>
+    <div class="row2">
+      <div class="field-group"><label>Weekend OT cap (hours)</label><input type="number" id="setSatCap" step="0.5"></div>
+      <div class="field-group"><label>Monthly late allowance (hours)</label><input type="number" id="setLateBudget" step="0.5"></div>
+    </div>
+    <div class="field-group" style="margin-top:8px;">
+      <label>Google Apps Script Web App URL</label>
+      <input type="text" id="setApiUrl" placeholder="https://script.google.com/macros/s/.../exec">
+      <div style="font-size:10.5px;color:var(--ink-soft);margin-top:5px;">
+        Leave blank to use local storage only. Paste your deployed Apps Script Web App URL to enable Google Sheets sync.
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn ghost" id="resetDataBtn">Reset all data</button>
+      <button class="btn save" id="saveSettingsBtn">Save settings</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= BS CALENDAR DATA (2065–2099 BS) ================= */
+const BS_DATA = {
+2065:[31,32,31,32,31,30,30,30,29,29,30,31],
+2066:[31,31,31,32,31,31,29,30,30,29,29,31],
+2067:[31,31,32,31,31,31,30,29,30,29,30,30],
+2068:[31,31,32,32,31,30,30,29,30,29,30,30],
+2069:[31,32,31,32,31,30,30,30,29,29,30,31],
+2070:[31,31,31,32,31,31,29,30,30,29,30,30],
+2071:[31,31,32,31,31,31,30,29,30,29,30,30],
+2072:[31,32,31,32,31,30,30,29,30,29,30,30],
+2073:[31,32,31,32,31,30,30,30,29,29,30,31],
+2074:[31,31,31,32,31,31,30,29,30,29,30,30],
+2075:[31,31,32,31,31,31,30,29,30,29,30,30],
+2076:[31,32,31,32,31,30,30,30,29,29,30,30],
+2077:[31,32,31,32,31,30,30,30,29,30,29,31],
+2078:[31,31,31,32,31,31,30,29,30,29,30,30],
+2079:[31,31,32,31,31,31,30,29,30,29,30,30],
+2080:[31,32,31,32,31,30,30,30,29,29,30,30],
+2081:[31,32,31,32,31,30,30,30,29,30,29,31],
+2082:[31,31,32,31,31,31,30,29,30,29,30,30],
+2083:[31,31,32,31,31,31,30,29,30,29,30,30],
+2084:[31,31,32,31,31,30,30,30,29,30,30,30],
+2085:[31,32,31,32,30,31,30,30,29,30,30,30],
+2086:[30,32,31,32,31,30,30,30,29,30,30,30],
+2087:[31,31,32,31,31,31,30,30,29,30,30,30],
+2088:[30,31,32,32,30,31,30,30,29,30,30,30],
+2089:[30,32,31,32,31,30,30,30,29,30,30,30],
+2090:[30,32,31,32,31,30,30,30,29,30,30,30],
+2091:[31,31,32,31,31,31,30,30,29,30,30,30],
+2092:[30,31,32,32,31,30,30,30,29,30,30,30],
+2093:[30,32,31,32,31,30,30,30,29,30,30,30],
+2094:[31,31,32,31,31,30,30,30,29,30,30,30],
+2095:[31,31,32,31,31,31,30,29,30,30,30,30],
+2096:[30,31,32,32,31,30,30,29,30,29,30,30],
+2097:[31,32,31,32,31,30,30,30,29,30,30,30],
+2098:[31,31,32,31,31,31,29,30,29,30,29,31],
+2099:[31,32,31,32,31,30,30,30,29,29,30,31]
+};
+const MONTH_NAMES = ['Baishakh','Jestha','Ashar','Shrawan','Bhadra','Ashwin','Kartik','Mangsir','Poush','Magh','Falgun','Chaitra'];
+const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const EPOCH_BS_YEAR = 2070;
+const EPOCH_AD = new Date(2013,3,14); // 14 Apr 2013 = 1 Baishakh 2070
+
+function sumYear(y){ return BS_DATA[y].reduce((a,b)=>a+b,0); }
+function daysInMonth(y,m){ return BS_DATA[y][m-1]; }
+
+function bsToAD(y,m,d){
+  let offset=0;
+  if(y>=EPOCH_BS_YEAR){
+    for(let yy=EPOCH_BS_YEAR; yy<y; yy++) offset += sumYear(yy);
+  } else {
+    for(let yy=y; yy<EPOCH_BS_YEAR; yy++) offset -= sumYear(yy);
+  }
+  for(let mm=1; mm<m; mm++) offset += BS_DATA[y][mm-1];
+  offset += d-1;
+  const dt = new Date(EPOCH_AD.getTime());
+  dt.setDate(dt.getDate()+offset);
+  return dt;
+}
+function adToBS(jsDate){
+  const a = new Date(jsDate.getFullYear(), jsDate.getMonth(), jsDate.getDate());
+  let diff = Math.round((a - EPOCH_AD)/86400000);
+  let y = EPOCH_BS_YEAR;
+  while(diff < 0){ y--; diff += sumYear(y); }
+  while(diff >= sumYear(y)){ diff -= sumYear(y); y++; }
+  let m=1;
+  while(diff >= BS_DATA[y][m-1]){ diff -= BS_DATA[y][m-1]; m++; }
+  const d = diff+1;
+  return {y,m,d};
+}
+
+/* ================= STATE ================= */
+let today = adToBS(new Date());
+let viewY = today.y, viewM = today.m;
+let entriesCache = {};   // {year: {"m-d": entry}}
+let holidaysCache = null; // {"y-m-d": name}
+let settings = {dutyStart:"09:00",dutyEnd:"17:00",earlyCap:60,lateCap:60,satCap:7,lateBudget:7,apiUrl:""};
+let activeDay = null; // {y,m,d}
+
+const DEFAULT_HOLIDAYS_2083 = {
+"2083-1-1":"Nepali New Year",
+"2083-1-18":"Buddha Jayanti / Workers' Day",
+"2083-2-15":"Republic Day",
+"2083-5-12":"Janai Purnima / Rakshabandhan",
+"2083-5-19":"Krishna Janmashtami",
+"2083-6-3":"Constitution Day",
+"2083-6-25":"Ghatasthapana",
+"2083-6-31":"Dashain",
+"2083-7-1":"Dashain",
+"2083-7-2":"Dashain (Fulpati)",
+"2083-7-3":"Dashain (Maha Ashtami)",
+"2083-7-4":"Dashain (Maha Navami)",
+"2083-7-5":"Dashain (Vijaya Dashami)",
+"2083-7-6":"Dashain (Ekadashi)",
+"2083-7-22":"Tihar (Laxmi Puja)",
+"2083-7-23":"Tihar",
+"2083-7-24":"Tihar (Gobardhan)",
+"2083-7-25":"Tihar (Bhai Tika)",
+"2083-7-26":"Tihar",
+"2083-7-29":"Chhath Parva",
+"2083-9-9":"Yomari Punhi",
+"2083-9-10":"Christmas Day",
+"2083-9-15":"Tamu Lhosar",
+"2083-9-27":"Prithvi Jayanti",
+"2083-10-1":"Maghe Sankranti",
+"2083-10-16":"Martyrs' Day",
+"2083-10-24":"Sonam Lhosar",
+"2083-11-7":"National Democracy Day",
+"2083-11-22":"Maha Shivaratri",
+"2083-11-24":"International Women's Day",
+"2083-11-25":"Gyalpo Lhosar",
+"2083-12-7":"Fagu Purnima (Holi)"
+};
+
+/* ================= DATA NORMALIZATION ================= */
+function cleanTimeValue(v){
+  if(v===null || v===undefined || v==='') return '';
+  if(v instanceof Date && !isNaN(v)){
+    const hh=String(v.getHours()).padStart(2,'0');
+    const mm=String(v.getMinutes()).padStart(2,'0');
+    return `${hh}:${mm}`;
+  }
+  const s=String(v).trim();
+  // Convert accidental ISO/date strings such as 1899-12-30T06:00:00... to HH:MM.
+  const iso=s.match(/T(\d{1,2}):(\d{2})/);
+  if(iso) return `${String(iso[1]).padStart(2,'0')}:${iso[2]}`;
+  const hm=s.match(/^(\d{1,2}):(\d{2})/);
+  if(hm) return `${String(hm[1]).padStart(2,'0')}:${hm[2]}`;
+  return '';
+}
+function normalizeEntryFromCloud(e){
+  if(!e || typeof e!=='object') return null;
+  const out={...e};
+  out.inTime=cleanTimeValue(e.inTime);
+  out.outTime=cleanTimeValue(e.outTime);
+  if(e.weekendHours!=='' && e.weekendHours!==null && e.weekendHours!==undefined)
+    out.weekendHours=Number(e.weekendHours)||0;
+  if(e.holHours!=='' && e.holHours!==null && e.holHours!==undefined)
+    out.holHours=Number(e.holHours)||0;
+  out.isLeave=!!e.isLeave;
+  out.workedWeekend=!!(e.workedWeekend || e.workedSat);
+  out.workedHoliday=!!e.workedHoliday;
+  return out;
+}
+function normalizeYearEntries(entries){
+  const out={};
+  Object.keys(entries||{}).forEach(k=>{
+    // Only accept valid BS month-day keys such as 5-7.
+    if(!/^\d{1,2}-\d{1,2}$/.test(k)) return;
+    const e=normalizeEntryFromCloud(entries[k]);
+    if(e) out[k]=e;
+  });
+  return out;
+}
+
+/* ================= GOOGLE SHEETS SYNC =================
+   The app keeps a local copy for offline use. If apiUrl is set,
+   it also synchronizes attendance/settings/holidays through a
+   Google Apps Script Web App.
+============================================================ */
+function setSyncStatus(text){
+  const el=document.getElementById('syncStatus');
+  if(el) el.textContent=text;
+}
+async function apiCall(action, payload={}){
+  const url=(settings.apiUrl||'').trim();
+  if(!url) return null;
+  const body=JSON.stringify(Object.assign({action},payload));
+  const res=await fetch(url,{
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body
+  });
+  if(!res.ok) throw new Error('Google Apps Script HTTP '+res.status);
+  return await res.json();
+}
+async function syncYearFromCloud(y){
+  if(!(settings.apiUrl||'').trim()) return false;
+  try{
+    setSyncStatus('Syncing…');
+    const data=await apiCall('getYear',{year:y});
+    if(data && data.ok){
+      entriesCache[y]=normalizeYearEntries(data.entries||{});
+      try{ await localSet('entries-'+y, JSON.stringify(entriesCache[y])); }catch(e){}
+      setSyncStatus('Synced');
+      return true;
+    }
+  }catch(e){
+    console.error(e);
+  }
+  setSyncStatus('Offline');
+  return false;
+}
+async function syncAllToCloud(){
+  if(!(settings.apiUrl||'').trim()){
+    showToast('Add Apps Script URL in Settings first');
+    return;
+  }
+  try{
+    setSyncStatus('Syncing…');
+    await apiCall('saveSettings',{settings});
+    await apiCall('saveHolidays',{holidays:holidaysCache||{}});
+    for(const y of Object.keys(entriesCache)){
+      await apiCall('saveYear',{year:Number(y),entries:normalizeYearEntries(entriesCache[y]||{})});
+    }
+    setSyncStatus('Synced');
+    showToast('Google Sheets synced');
+  }catch(e){
+    console.error(e);
+    setSyncStatus('Offline');
+    showToast('Sync failed — local data kept');
+  }
+}
+
+/* ================= STORAGE HELPERS =================
+   v3 FIX:
+   The downloaded HTML runs as a normal Android/Chrome web page.
+   `window.storage` is not guaranteed to persist there, so v2 could
+   lose the Apps Script URL every time the HTML was reopened.
+   We now use browser localStorage as the primary local database.
+   The old window.storage API is only a fallback for environments that
+   provide it.
+======================================================== */
+const LOCAL_PREFIX = 'nea_tracker_v3_';
+
+async function localGet(key){
+  try{
+    const k=LOCAL_PREFIX+key;
+    if(window.localStorage){
+      const value=window.localStorage.getItem(k);
+      if(value!==null) return {value};
+    }
+  }catch(e){}
+  try{
+    if(window.storage){
+      const r=await window.storage.get(key, false);
+      if(r && r.value) return r;
+    }
+  }catch(e){}
+  return null;
+}
+async function localSet(key,value){
+  try{
+    if(window.localStorage){
+      window.localStorage.setItem(LOCAL_PREFIX+key, String(value));
+      return true;
+    }
+  }catch(e){}
+  try{
+    if(window.storage){
+      await window.storage.set(key, String(value), false);
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+async function localDelete(key){
+  try{
+    if(window.localStorage) window.localStorage.removeItem(LOCAL_PREFIX+key);
+  }catch(e){}
+  try{
+    if(window.storage) await window.storage.delete(key, false);
+  }catch(e){}
+}
+async function migrateOldBrowserSettings(){
+  try{
+    const v3 = window.localStorage && window.localStorage.getItem(LOCAL_PREFIX+'settings');
+    if(v3) return;
+    const old = window.localStorage && window.localStorage.getItem('settings');
+    if(old){
+      const parsed=JSON.parse(old);
+      if(parsed && parsed.apiUrl) await localSet('settings', old);
+    }
+  }catch(e){}
+}
+async function loadSettings(){
+  try{
+    const r = await localGet('settings');
+    if(r && r.value) settings = Object.assign(settings, JSON.parse(r.value));
+  }catch(e){ /* not set yet, use defaults */ }
+}
+async function saveSettings(){
+  const ok = await localSet('settings', JSON.stringify(settings));
+  if(!ok) showToast('Could not save settings on this device');
+  if((settings.apiUrl||'').trim()){
+    try{
+      await apiCall('saveSettings',{settings});
+      setSyncStatus('Synced');
+    }catch(e){
+      setSyncStatus('Offline');
+    }
+  }
+}
+async function loadEntries(y){
+  if(entriesCache[y]) return entriesCache[y];
+  try{
+    const r = await localGet('entries-'+y);
+    entriesCache[y] = r && r.value ? JSON.parse(r.value) : {};
+  }catch(e){ entriesCache[y] = {}; }
+  return entriesCache[y];
+}
+async function saveEntries(y){
+  entriesCache[y]=normalizeYearEntries(entriesCache[y]||{});
+  const ok = await localSet('entries-'+y, JSON.stringify(entriesCache[y]));
+  if(!ok) showToast('Could not save attendance on this device');
+  if((settings.apiUrl||'').trim()){
+    try{
+      await apiCall('saveYear',{year:Number(y),entries:entriesCache[y]||{}});
+      setSyncStatus('Synced');
+    }catch(e){
+      setSyncStatus('Offline');
+      showToast('Saved locally; Google sync pending');
+    }
+  }
+}
+async function loadHolidays(){
+  if(holidaysCache) return holidaysCache;
+  try{
+    const r = await localGet('holidays');
+    holidaysCache = r && r.value ? JSON.parse(r.value) : Object.assign({}, DEFAULT_HOLIDAYS_2083);
+    if(!r || !r.value){ await saveHolidays(); }
+  }catch(e){ holidaysCache = Object.assign({}, DEFAULT_HOLIDAYS_2083); }
+  return holidaysCache;
+}
+async function saveHolidays(){
+  const ok = await localSet('holidays', JSON.stringify(holidaysCache||{}));
+  if(!ok) showToast('Could not save holidays');
+  if((settings.apiUrl||'').trim()){
+    try{
+      await apiCall('saveHolidays',{holidays:holidaysCache||{}});
+      setSyncStatus('Synced');
+    }catch(e){ setSyncStatus('Offline'); }
+  }
+}
+
+/* ================= UTIL ================= */
+function pad(n){ return n<10 ? '0'+n : ''+n; }
+function timeToMin(t){ if(!t) return null; const [h,m]=t.split(':').map(Number); return h*60+m; }
+function minToHM(min){ const h=Math.floor(min/60), m=Math.round(min%60); return h+'h '+m+'m'; }
+function showToast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(showToast._t); showToast._t=setTimeout(()=>t.classList.remove('show'),1800);
+}
+
+/* ================= COMPUTE DAY OT/LATE ================= */
+function computeDay(y,m,d,entries,holidays){
+  const jsDate = bsToAD(y,m,d);
+  const dow = jsDate.getDay(); // 0 Sun ... 6 Sat
+  const key = m+'-'+d;
+  const hkey = y+'-'+m+'-'+d;
+  const entry = entries[key] || {};
+  const holidayName = holidays[hkey];
+  const isSaturday = dow===6;
+  const isSunday = dow===0;
+  const isWeekend = isSaturday || isSunday;
+  const isHoliday = !!holidayName;
+  let result = {dow, isSaturday, isSunday, isWeekend, isHoliday, holidayName, entry, otHours:0, lateMin:0, isLeave:!!entry.isLeave, worked:false};
+
+  if(entry.isLeave){ return result; }
+
+  if(isWeekend){
+    if(entry.workedWeekend || entry.workedSat){
+      result.worked = true;
+      const weekendHours = entry.weekendHours ?? entry.satHours;
+      result.otHours = Math.min(parseFloat(weekendHours)||0, settings.satCap);
+    }
+    return result;
+  }
+  if(isHoliday){
+    if(entry.workedHoliday){
+      result.worked = true;
+      result.otHours = Math.max(0, parseFloat(entry.holHours)||0);
+    }
+    return result;
+  }
+  // normal weekday
+  const dutyStart = timeToMin(settings.dutyStart);
+  const dutyEnd = timeToMin(settings.dutyEnd);
+  const inM = timeToMin(entry.inTime);
+  const outM = timeToMin(entry.outTime);
+  if(inM!=null){
+    result.worked = true;
+    if(inM < dutyStart){
+      const earlyMin = Math.min(dutyStart-inM, settings.earlyCap);
+      result.otHours += earlyMin/60;
+    } else if(inM > dutyStart){
+      result.lateMin = inM-dutyStart;
+    }
+  }
+  if(outM!=null && outM > dutyEnd){
+    const lateOutMin = Math.min(outM-dutyEnd, settings.lateCap);
+    result.otHours += lateOutMin/60;
+  }
+  return result;
+}
+
+/* ================= RENDER: HEADER ================= */
+function renderToday(){
+  document.getElementById('todayBS').textContent = `${today.d} ${MONTH_NAMES[today.m-1]} ${today.y}, ${DOW[bsToAD(today.y,today.m,today.d).getDay()]}`;
+  document.getElementById('todayAD').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+}
+
+/* ================= REMINDERS ================= */
+function renderReminder(){
+  const zone = document.getElementById('reminderZone');
+  zone.innerHTML='';
+  if(today.d===15){
+    zone.innerHTML = `<div class="banner reminder"><div class="b-ico">🏢</div><div><b>OT submission day</b>Go to NEA Banepa office today to submit your OT form for ${MONTH_NAMES[today.m-1]} 1–15.</div></div>`;
+  } else if(today.d===1){
+    let pm=today.m-1, py=today.y; if(pm<1){pm=12;py--;}
+    zone.innerHTML = `<div class="banner reminder"><div class="b-ico">🏢</div><div><b>OT submission day</b>Go to NEA Banepa office today to submit your OT form for ${MONTH_NAMES[pm-1]} 16–end.</div></div>`;
+  }
+}
+
+/* ================= RENDER: CALENDAR ================= */
+async function renderCalendar(){
+  await syncYearFromCloud(viewY);
+  document.getElementById('monthTitle').innerHTML = `${MONTH_NAMES[viewM-1]} ${viewY}<small>${bsToAD(viewY,viewM,1).toLocaleDateString('en-US',{month:'short',year:'numeric'})} – ${bsToAD(viewY,viewM,daysInMonth(viewY,viewM)).toLocaleDateString('en-US',{month:'short',year:'numeric'})}</small>`;
+  const entries = await loadEntries(viewY);
+  const holidays = await loadHolidays();
+  const nDays = daysInMonth(viewY,viewM);
+  const firstDow = bsToAD(viewY,viewM,1).getDay();
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML='';
+  for(let i=0;i<firstDow;i++){
+    const e=document.createElement('div'); e.className='cell empty'; grid.appendChild(e);
+  }
+  for(let d=1; d<=nDays; d++){
+    const info = computeDay(viewY,viewM,d,entries,holidays);
+    const cell = document.createElement('div');
+    let cls='cell';
+    if(info.isLeave) cls+=' leave';
+    else if(info.isHoliday) cls+=' holiday';
+    else if(info.isWeekend) cls+=' '+(info.isSaturday?'sat':'sun');
+    if(viewY===today.y && viewM===today.m && d===today.d) cls+=' today';
+    cell.className=cls;
+    let dotsHtml='<div class="dots">';
+    if(info.otHours>0) dotsHtml+='<span class="dot ot"></span>';
+    if(info.lateMin>0) dotsHtml+='<span class="dot late"></span>';
+    if(info.worked && info.otHours===0 && info.lateMin===0) dotsHtml+='<span class="dot work"></span>';
+    dotsHtml+='</div>';
+    cell.innerHTML = `<span>${d}</span>${dotsHtml}`;
+    cell.addEventListener('click', ()=>openDaySheet(viewY,viewM,d));
+    grid.appendChild(cell);
+  }
+  renderSummary(entries, holidays, nDays);
+}
+
+/* ================= RENDER: SUMMARY ================= */
+function renderSummary(entries, holidays, nDays){
+  let otP1=0, otP2=0, lateMinTotal=0, lateDays=0, leaveCount=0, holWorked=0;
+  for(let d=1; d<=nDays; d++){
+    const info = computeDay(viewY,viewM,d,entries,holidays);
+    if(info.isLeave) leaveCount++;
+    if(info.isHoliday && info.worked) holWorked++;
+    if(d<=15) otP1 += info.otHours; else otP2 += info.otHours;
+    if(info.lateMin>0){ lateMinTotal += info.lateMin; lateDays++; }
+  }
+  document.getElementById('otP1').textContent = otP1.toFixed(1)+' h';
+  document.getElementById('otP2').textContent = otP2.toFixed(1)+' h';
+  document.getElementById('p2Label').textContent = `Period 16–${nDays}`;
+  document.getElementById('leaveCount').textContent = leaveCount;
+  document.getElementById('holWorked').textContent = holWorked;
+
+  const budgetMin = settings.lateBudget*60;
+  const pct = Math.min(100, (lateMinTotal/budgetMin)*100);
+  const bar = document.getElementById('lateBar');
+  bar.style.width = pct+'%';
+  bar.classList.toggle('danger', lateMinTotal>=budgetMin);
+  document.getElementById('lateMinLabel').textContent = `${minToHM(lateMinTotal)} / ${settings.lateBudget}h`;
+  document.getElementById('lateDaysCount').textContent = lateDays+' late day'+(lateDays===1?'':'s');
+  const note = document.getElementById('lateNote');
+  if(lateMinTotal>=budgetMin){ note.textContent='Over the monthly limit — heads up'; note.style.color='var(--danger)'; }
+  else if(lateMinTotal>=budgetMin*0.8){ note.textContent='Getting close to 7h — be careful'; note.style.color='var(--warn)'; }
+  else { note.textContent='On track'; note.style.color='var(--ink-soft)'; }
+}
+
+/* ================= DAY SHEET ================= */
+async function openDaySheet(y,m,d){
+  activeDay = {y,m,d};
+  const entries = await loadEntries(y);
+  const holidays = await loadHolidays();
+  const key = m+'-'+d;
+  const hkey = y+'-'+m+'-'+d;
+  const entry = entries[key] || {};
+  const jsDate = bsToAD(y,m,d);
+  const dow = jsDate.getDay();
+  const isSaturday = dow===6;
+  const isSunday = dow===0;
+  const isWeekend = isSaturday || isSunday;
+  const holidayName = holidays[hkey];
+
+  document.getElementById('dayTitle').textContent = `${d} ${MONTH_NAMES[m-1]} ${y}`;
+  document.getElementById('daySubtitle').textContent = `${DOW[dow]} · ${jsDate.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}`;
+
+  document.getElementById('dayFormNormal').style.display = (isWeekend||holidayName) ? 'none':'block';
+  document.getElementById('dayFormWeekend').style.display = isWeekend ? 'block':'none';
+  document.getElementById('dayFormHoliday').style.display = (holidayName && !isWeekend) ? 'block':'none';
+
+  document.getElementById('leaveToggle').checked = !!entry.isLeave;
+  document.getElementById('leaveTypeWrap').style.display = entry.isLeave ? 'block':'none';
+  document.getElementById('workFieldsWrap').style.display = entry.isLeave ? 'none':'block';
+  document.getElementById('leaveType').value = entry.leaveType || 'Home leave';
+  document.getElementById('inTime').value = entry.inTime || '';
+  document.getElementById('outTime').value = entry.outTime || '';
+
+  document.getElementById('weekendToggle').checked = !!(entry.workedWeekend || entry.workedSat);
+  document.getElementById('weekendHours').value = entry.weekendHours ?? entry.satHours ?? '';
+
+  document.getElementById('holidayNameField').value = holidayName || entry.holidayNameCustom || '';
+  document.getElementById('holWorkToggle').checked = !!entry.workedHoliday;
+  document.getElementById('holHours').value = entry.holHours || '';
+
+  document.getElementById('dayNote').value = entry.note || '';
+
+  updateNormalComputed();
+  document.getElementById('dayOverlay').classList.add('open');
+}
+function updateNormalComputed(){
+  const inTime = document.getElementById('inTime').value;
+  const outTime = document.getElementById('outTime').value;
+  const dutyStart = timeToMin(settings.dutyStart), dutyEnd = timeToMin(settings.dutyEnd);
+  const inM = timeToMin(inTime), outM = timeToMin(outTime);
+  let ot=0, late=0;
+  if(inM!=null){
+    if(inM<dutyStart) ot += Math.min(dutyStart-inM, settings.earlyCap)/60;
+    else if(inM>dutyStart) late = inM-dutyStart;
+  }
+  if(outM!=null && outM>dutyEnd) ot += Math.min(outM-dutyEnd, settings.lateCap)/60;
+  document.getElementById('normalComputed').innerHTML =
+    `<div class="c-item">OT today<b style="color:var(--ot)">${ot.toFixed(2)} h</b></div>`+
+    `<div class="c-item">Late by<b style="color:${late>0?'var(--warn)':'var(--ink)'}">${late} min</b></div>`;
+}
+document.getElementById('inTime').addEventListener('input', updateNormalComputed);
+document.getElementById('outTime').addEventListener('input', updateNormalComputed);
+document.getElementById('leaveToggle').addEventListener('change', function(){
+  document.getElementById('leaveTypeWrap').style.display = this.checked ? 'block':'none';
+  document.getElementById('workFieldsWrap').style.display = this.checked ? 'none':'block';
+});
+
+document.getElementById('closeDaySheet').onclick = ()=>document.getElementById('dayOverlay').classList.remove('open');
+document.getElementById('dayOverlay').addEventListener('click', e=>{ if(e.target.id==='dayOverlay') e.currentTarget.classList.remove('open'); });
+
+document.getElementById('saveDayBtn').onclick = async ()=>{
+  const {y,m,d} = activeDay;
+  const entries = await loadEntries(y);
+  const key = m+'-'+d;
+  const holidays = await loadHolidays();
+  const hkey = y+'-'+m+'-'+d;
+  const jsDate = bsToAD(y,m,d);
+  const dayOfWeek = jsDate.getDay();
+  const isWeekendDay = dayOfWeek===0 || dayOfWeek===6;
+  const isHolidayDay = !!holidays[hkey];
+
+  const entry = {};
+  entry.isLeave = document.getElementById('leaveToggle').checked;
+  if(entry.isLeave){
+    entry.leaveType = document.getElementById('leaveType').value;
+  } else {
+    if(isWeekendDay){
+      entry.workedWeekend = document.getElementById('weekendToggle').checked;
+      entry.weekendHours = document.getElementById('weekendHours').value;
+    } else if(isHolidayDay){
+      entry.workedHoliday = document.getElementById('holWorkToggle').checked;
+      entry.holHours = document.getElementById('holHours').value;
+      const customName = document.getElementById('holidayNameField').value.trim();
+      if(customName && customName!==holidays[hkey]){ holidays[hkey]=customName; await saveHolidays(); }
+    } else {
+      entry.inTime = document.getElementById('inTime').value;
+      entry.outTime = document.getElementById('outTime').value;
+    }
+  }
+  entry.note = document.getElementById('dayNote').value;
+
+  const hasContent = entry.isLeave || entry.inTime || entry.outTime || entry.workedWeekend || entry.weekendHours || entry.workedHoliday || entry.note;
+  if(hasContent){ entries[key]=entry; } else { delete entries[key]; }
+  entriesCache[y]=entries;
+  await saveEntries(y);
+  document.getElementById('dayOverlay').classList.remove('open');
+  showToast('Saved');
+  renderCalendar();
+};
+document.getElementById('deleteDayBtn').onclick = async ()=>{
+  const {y,m,d} = activeDay;
+  const entries = await loadEntries(y);
+  delete entries[m+'-'+d];
+  entriesCache[y]=entries;
+  await saveEntries(y);
+  document.getElementById('dayOverlay').classList.remove('open');
+  showToast('Cleared');
+  renderCalendar();
+};
+
+/* ================= NAVIGATION ================= */
+document.getElementById('prevMonth').onclick = ()=>{
+  viewM--; if(viewM<1){viewM=12; viewY--;}
+  renderCalendar();
+};
+document.getElementById('nextMonth').onclick = ()=>{
+  viewM++; if(viewM>12){viewM=1; viewY++;}
+  renderCalendar();
+};
+document.getElementById('jumpTodayBtn').onclick = ()=>{
+  viewY=today.y; viewM=today.m; renderCalendar();
+};
+
+/* ================= HOLIDAYS MANAGER ================= */
+let holYearView = today.y;
+document.getElementById('manageHolidaysBtn').onclick = async ()=>{
+  await loadHolidays();
+  renderHolYearPicker();
+  renderHolidayList();
+  document.getElementById('holOverlay').classList.add('open');
+};
+document.getElementById('closeHolSheet').onclick = ()=>document.getElementById('holOverlay').classList.remove('open');
+document.getElementById('holOverlay').addEventListener('click', e=>{ if(e.target.id==='holOverlay') e.currentTarget.classList.remove('open'); });
+
+function renderHolYearPicker(){
+  const wrap = document.getElementById('holYearPicker');
+  wrap.innerHTML='';
+  const years = [today.y-1, today.y, today.y+1, today.y+2];
+  years.forEach(y=>{
+    const b=document.createElement('div');
+    b.className='mp-btn'+(y===holYearView?' active':'');
+    b.textContent=y;
+    b.onclick=()=>{ holYearView=y; renderHolYearPicker(); renderHolidayList(); };
+    wrap.appendChild(b);
+  });
+  document.getElementById('holYearLabel').textContent = holYearView;
+}
+function renderHolidayList(){
+  const wrap = document.getElementById('holidayListWrap');
+  const items = Object.entries(holidaysCache||{}).filter(([k])=>k.startsWith(holYearView+'-'))
+    .sort((a,b)=>{
+      const [,am,ad]=a[0].split('-').map(Number);
+      const [,bm,bd]=b[0].split('-').map(Number);
+      return am-bm || ad-bd;
+    });
+  if(items.length===0){ wrap.innerHTML='<div class="empty-state">No holidays added for '+holYearView+' BS yet.</div>'; return; }
+  wrap.innerHTML = items.map(([k,name])=>{
+    const [,m,d]=k.split('-');
+    return `<div class="hol-list-item"><div><div class="h-name">${name}</div><div class="h-date">${MONTH_NAMES[m-1]} ${d}, ${holYearView}</div></div><button class="rm-btn" data-k="${k}">Remove</button></div>`;
+  }).join('');
+  wrap.querySelectorAll('.rm-btn').forEach(btn=>{
+    btn.onclick = async ()=>{
+      delete holidaysCache[btn.dataset.k];
+      await saveHolidays();
+      renderHolidayList();
+      renderCalendar();
+    };
+  });
+}
+document.getElementById('addHolBtn').onclick = async ()=>{
+  const m = parseInt(document.getElementById('newHolMonth').value);
+  const d = parseInt(document.getElementById('newHolDay').value);
+  const name = document.getElementById('newHolName').value.trim();
+  if(!m||m<1||m>12||!d||d<1||d>32||!name){ showToast('Enter month (1-12), day, and a name'); return; }
+  holidaysCache = holidaysCache || {};
+  holidaysCache[`${holYearView}-${m}-${d}`] = name;
+  await saveHolidays();
+  document.getElementById('newHolMonth').value='';
+  document.getElementById('newHolDay').value='';
+  document.getElementById('newHolName').value='';
+  renderHolidayList();
+  renderCalendar();
+  showToast('Holiday added');
+};
+
+/* ================= SETTINGS ================= */
+document.getElementById('settingsBtn').onclick = ()=>{
+  document.getElementById('setDutyStart').value = settings.dutyStart;
+  document.getElementById('setDutyEnd').value = settings.dutyEnd;
+  document.getElementById('setEarlyCap').value = settings.earlyCap;
+  document.getElementById('setLateCap').value = settings.lateCap;
+  document.getElementById('setSatCap').value = settings.satCap;
+  document.getElementById('setLateBudget').value = settings.lateBudget;
+  document.getElementById('setApiUrl').value = settings.apiUrl || '';
+  document.getElementById('settingsOverlay').classList.add('open');
+};
+document.getElementById('closeSettingsSheet').onclick = ()=>document.getElementById('settingsOverlay').classList.remove('open');
+document.getElementById('settingsOverlay').addEventListener('click', e=>{ if(e.target.id==='settingsOverlay') e.currentTarget.classList.remove('open'); });
+document.getElementById('saveSettingsBtn').onclick = async ()=>{
+  settings.dutyStart = document.getElementById('setDutyStart').value || '09:00';
+  settings.dutyEnd = document.getElementById('setDutyEnd').value || '17:00';
+  settings.earlyCap = parseInt(document.getElementById('setEarlyCap').value)||60;
+  settings.lateCap = parseInt(document.getElementById('setLateCap').value)||60;
+  settings.satCap = parseFloat(document.getElementById('setSatCap').value)||7;
+  settings.lateBudget = parseFloat(document.getElementById('setLateBudget').value)||7;
+  settings.apiUrl = document.getElementById('setApiUrl').value.trim();
+  await saveSettings();
+  document.getElementById('settingsOverlay').classList.remove('open');
+  showToast('Settings saved');
+  renderCalendar();
+};
+document.getElementById('resetDataBtn').onclick = async ()=>{
+  if(!confirm('This clears all saved attendance entries and custom holidays on this device. Continue?')) return;
+  try{
+    const keys = Object.keys(window.localStorage || {});
+    for(const k of keys){
+      if(k.startsWith(LOCAL_PREFIX+'entries-')) window.localStorage.removeItem(k);
+    }
+    await localDelete('holidays');
+  }catch(e){}
+  entriesCache = {}; holidaysCache=null;
+  await loadHolidays();
+  document.getElementById('settingsOverlay').classList.remove('open');
+  showToast('Data reset');
+  renderCalendar();
+};
+
+/* ================= CLOUD SYNC UI ================= */
+document.getElementById('syncBtn').onclick = async ()=>{
+  await syncYearFromCloud(viewY);
+  await syncAllToCloud();
+  await renderCalendar();
+};
+
+/* ================= INIT ================= */
+async function init(){
+  await migrateOldBrowserSettings();
+  await loadSettings();
+  setSyncStatus((settings.apiUrl||'').trim() ? 'Ready' : 'Local');
+  renderToday();
+  renderReminder();
+  await loadHolidays();
+  await renderCalendar();
+}
+init();
+</script>
+
+<script>
+/* PWA registration — only works when served over HTTPS or localhost. */
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js', {scope:'./'})
+      .then(() => console.log('NEA Attendance PWA service worker registered'))
+      .catch(err => console.warn('PWA service worker registration failed', err));
+  });
+}
+</script>
+</body>
+</html>
