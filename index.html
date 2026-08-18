@@ -915,8 +915,8 @@ document.getElementById('saveDayBtn').onclick = async ()=>{
   } else {
     if(isWeekendDay){
       entry.workedWeekend = document.getElementById('weekendToggle').checked;
-      entry.weekendHours = entry.workedWeekend ?
-        settings.satCap : 0;
+      const inputHours = parseFloat(document.getElementById('weekendHours').value);
+  entry.weekendHours = entry.workedWeekend ? (isNaN(inputHours) ? settings.satCap : inputHours) : 0;
     } else if(isHolidayDay){
       entry.workedHoliday = document.getElementById('holWorkToggle').checked;
       entry.holHours = document.getElementById('holHours').value;
