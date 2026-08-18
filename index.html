@@ -916,7 +916,7 @@ document.getElementById('saveDayBtn').onclick = async ()=>{
     if(isWeekendDay){
       entry.workedWeekend = document.getElementById('weekendToggle').checked;
       entry.weekendHours = entry.workedWeekend ?
-        settings.satCp : 0;
+        settings.satCap : 0;
     } else if(isHolidayDay){
       entry.workedHoliday = document.getElementById('holWorkToggle').checked;
       entry.holHours = document.getElementById('holHours').value;
