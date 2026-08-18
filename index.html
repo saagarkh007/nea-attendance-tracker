@@ -915,8 +915,15 @@ document.getElementById('saveDayBtn').onclick = async ()=>{
   } else {
     if(isWeekendDay){
       entry.workedWeekend = document.getElementById('weekendToggle').checked;
-      const inputHours = parseFloat(document.getElementById('weekendHours').value);
-  entry.weekendHours = entry.workedWeekend ? (isNaN(inputHours) ? settings.satCap : inputHours) : 0;
+      if(isWeekendDay){
+  entry.workedWeekend = document.getElementById('weekendToggle').checked;
+
+  const actualHours =
+    parseFloat(document.getElementById('weekendHours').value) || 0;
+
+  entry.weekendHours = actualHours;
+  entry.weekendOT = Math.min(actualHours, Number(settings.satCap) || 7);
+      }
     } else if(isHolidayDay){
       entry.workedHoliday = document.getElementById('holWorkToggle').checked;
       entry.holHours = document.getElementById('holHours').value;
