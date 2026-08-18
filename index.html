@@ -913,18 +913,24 @@ document.getElementById('saveDayBtn').onclick = async ()=>{
   if(entry.isLeave){
     entry.leaveType = document.getElementById('leaveType').value;
   } else {
-    if(isWeekendDay){
-      entry.workedWeekend = document.getElementById('weekendToggle').checked;
-      if(isWeekendDay){
-  entry.workedWeekend = document.getElementById('weekendToggle').checked;
+      
+    } 
+  if(isWeekend){
+  if(entry.workedWeekend || entry.workedSat){
+    result.worked = true;
 
-  const actualHours =
-    parseFloat(document.getElementById('weekendHours').value) || 0;
+    const actualHours =
+      parseFloat(entry.weekendHours) || 0;
 
-  entry.weekendHours = actualHours;
-  entry.weekendOT = Math.min(actualHours, Number(settings.satCap) || 7);
-      }
-    } else if(isHolidayDay){
+    result.actualWeekendHours = actualHours;
+
+    result.otHours =
+      Math.min(actualHours, Number(settings.satCap) || 7);
+  }
+
+  return result;
+  }
+  else if(isHolidayDay){
       entry.workedHoliday = document.getElementById('holWorkToggle').checked;
       entry.holHours = document.getElementById('holHours').value;
       const customName = document.getElementById('holidayNameField').value.trim();
