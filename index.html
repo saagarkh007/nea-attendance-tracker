@@ -61,7 +61,8 @@
   .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
   .cell{aspect-ratio:1/1;border-radius:10px;border:1px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:13px;font-weight:600;background:#F7F9F9;cursor:pointer;position:relative;color:var(--ink);}
   .cell.empty{background:transparent;cursor:default;}
-  .cell.sat,.cell.sun{background:var(--sat-bg);color:var(--sat);}
+  .cell.sat{background:#CDDCDE;color:var(--sat);}  /* Slightly darker for Saturday */
+.cell.sun{background:var(--sat-bg);color:var(--sat);} /* Lighter for Sunday */
   .cell.holiday{background:var(--holiday-bg);color:var(--holiday);}
   .cell.leave{background:var(--leave-bg);color:var(--leave);}
   .cell.today{outline:2px solid var(--spark);outline-offset:-2px;}
