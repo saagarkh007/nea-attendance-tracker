@@ -142,6 +142,15 @@
   .mp-btn{padding:8px 0;border-radius:9px;border:1px solid var(--border);background:#F5F8F8;font-size:12px;font-weight:600;cursor:pointer;width:calc(25% - 5px);}
   .mp-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
   footer.note{text-align:center;font-size:11px;color:var(--ink-soft);margin:22px 0 6px;padding:0 20px;line-height:1.5;}
+  /* Print Styles for Export */
+  @media print {
+    body, body.dark-mode { background: white !important; color: black !important; }
+      .overlay { display: none !important; }
+        #exportPreview { border: 1px solid #ccc; background: white !important; color: black !important; font-family: monospace; }
+          .btn-row, .cal-head, .close-x, .sheet-handle { display: none !important; }
+            .sheet { max-height: none !important; border-radius: 0 !important; box-shadow: none !important; background: white !important; }
+              header.top { background: #0F5C6B !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+              }
 </style>
 </head>
 <body>
@@ -299,8 +308,12 @@
     </div>
 
     <div class="btn-row">
-      <button class="btn del" id="deleteDayBtn">Clear day</button>
-      <button class="btn save" id="saveDayBtn">Save</button>
+      <div class="btn-row">
+          <button class="btn ghost" id="downloadCsvBtn">⬇ CSV</button>
+            <button class="btn ghost" id="copyOtBtn">📋 Copy</button>
+              <button class="btn save" id="printOtBtn">🖨️ Print / PDF</button>
+                <button class="btn save" id="shareOtBtn">📤 Share</button>
+                </div>
     </div>
   </div>
 </div>
@@ -1300,6 +1313,10 @@ document.getElementById('syncBtn').onclick = async () => {
   await syncAllToCloud();
   setSyncStatus('Synced');
 };
+/* ================= PRINT / PDF FUNCTION ================= */
+document.getElementById('printOtBtn').onclick = () => {
+  window.print();
+  };
 </script>
 </body>
 </html>
