@@ -990,6 +990,7 @@ document.getElementById('saveDayBtn').onclick = async ()=>{
     }
   }
   entry.note = document.getElementById('dayNote').value;
+  entry._serverTimestamp = Date.now();//Add a timestamp to the entry
 
   const hasContent = entry.isLeave || entry.inTime || entry.outTime || entry.workedWeekend || entry.weekendHours || entry.workedHoliday || entry.note;
   if(hasContent){ entries[key]=entry; } else { delete entries[key]; }
