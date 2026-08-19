@@ -152,7 +152,13 @@
       <svg class="bolt" viewBox="0 0 24 24" fill="none"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z" fill="#F2B705"/></svg>
       <div class="brand-text">NEA Attendance<small>Overtime · Leave · BS Calendar</small></div>
     </div>
-    <div style="display:flex;gap:6px;align-items:center;"><span id="syncStatus" style="font-size:10px;opacity:.9;">Local</span><button class="icon-btn" id="syncBtn" title="Sync with Google Sheets">↻</button><button class="icon-btn" id="settingsBtn" title="Settings">⚙</button></div>
+    <div style="display:flex;gap:6px;align-items:center;">
+  <span id="syncStatus" style="font-size:10px;opacity:.9;text-align:right;line-height:1.2;">
+    Local<br><span style="font-size:8px;opacity:0.7;" id="syncTime">—</span>
+  </span>
+  <button class="icon-btn" id="syncBtn" title="Sync with Google Sheets">↻</button>
+  <button class="icon-btn" id="settingsBtn" title="Settings">⚙</button>
+    </div>
   </div>
   <div class="today-line">
     <div class="bs-date" id="todayBS">—</div>
@@ -1277,6 +1283,22 @@ async function init(){
   await renderCalendar();
 }
 init();
+  // Enhanced sync status with timestamp
+function setSyncStatus(text, isError = false) {
+  const el = document.getElementById('syncStatus');
+  if (!el) return;
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+  el.innerHTML = text + '<br><span style="font-size:8px;opacity:0.7;">' + timeStr + '</span>';
+  if (isError) el.style.color = 'var(--danger)';
+  else el.style.color = '';
+}
+
+// Override the sync button to show time
+document.getElementById('syncBtn').onclick = async () => {
+  await syncAllToCloud();
+  setSyncStatus('Synced');
+};
 </script>
 </body>
 </html>
