@@ -29,6 +29,8 @@
     --sat:#3B5A66;
     --sat-bg:#E4EDEE;
     --radius:14px;
+    --memo:#D35400;        /* Strong orange-red */
+--memo-bg:#FDEDEC;     /* Light red background */
   }
   *{box-sizing:border-box;}
   body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;-webkit-tap-highlight-color:transparent;padding-bottom:40px;}
@@ -65,6 +67,12 @@
 .cell.sat{background:#CDDCDE;color:var(--sat);}     /* Darker blue for Sat */
 .cell.sun{background:var(--sat-bg);color:var(--sat);} /* Lighter blue for Sun */
   .cell.holiday{background:var(--holiday-bg);color:var(--holiday);}
+  .cell.memo{
+  background:var(--memo-bg);
+  color:var(--memo);
+  border:2px solid var(--memo);
+  font-weight:800;
+  }
   .cell.leave{background:var(--leave-bg);color:var(--leave);}
   .cell.today{outline:2px solid var(--spark);outline-offset:-2px;}
   .cell .dots{display:flex;gap:2px;margin-top:2px;height:5px;}
@@ -183,6 +191,7 @@
       <span><i style="background:var(--holiday-bg);border:1px solid var(--holiday)"></i>Holiday</span>
       <span><i style="background:var(--leave-bg);border:1px solid var(--leave)"></i>Leave</span>
       <span><i style="background:var(--sat-bg);border:1px solid var(--sat)"></i>Weekend (Sat &amp; Sun)</span>
+      <span><i style="background:var(--memo-bg);border:2px solid var(--memo)"></i>Memo Required</span>
     </div>
   </div>
 
@@ -235,6 +244,9 @@
 
     <div id="dayFormNormal">
       <div class="toggle-row">
+  <div class="t-label">📄 Memo Filled (for missed punch)</div>
+  <label class="switch"><input type="checkbox" id="memoFilledToggle"><span class="slider"></span></label>
+        </>
         <div class="t-label">On leave</div>
         <label class="switch"><input type="checkbox" id="leaveToggle"><span class="slider"></span></label>
       </div>
@@ -762,6 +774,19 @@ function computeDay(y,m,d,entries,holidays){
       result.actualWeekendHours = Math.max(0, parseFloat(weekendHours)||0);
       result.otHours = Math.min(result.actualWeekendHours, Number(settings.satCap)||7);
     }
+    // --- MEMO LOGIC ---
+let memoRequired = false;
+if(!result.isLeave && !result.isWeekend && !result.isHoliday){
+  const hasIn = entry.inTime && entry.inTime.trim() !== '';
+  const hasOut = entry.outTime && entry.outTime.trim() !== '';
+  if(!hasIn || !hasOut){
+    memoRequired = true;
+  }
+}
+if(entry.memoFilled) memoRequired = false;
+
+result.memoRequired = memoRequired;
+result.memoFilled = !!entry.memoFilled;
     return result;
   }
   if(isHoliday){
@@ -802,11 +827,35 @@ function renderToday(){
 function renderReminder(){
   const zone = document.getElementById('reminderZone');
   zone.innerHTML='';
+
+  // 1. OT submission reminders
   if(today.d===15){
-    zone.innerHTML = `<div class="banner reminder"><div class="b-ico">🏢</div><div><b>OT submission day</b>Go to NEA Banepa office today to submit your OT form for ${MONTH_NAMES[today.m-1]} 1–15.</div></div>`;
+    zone.innerHTML += `<div class="banner reminder"><div class="b-ico">🏢</div><div><b>OT submission day</b>Go to NEA Banepa office today to submit your OT form for ${MONTH_NAMES[today.m-1]} 1–15.</div></div>`;
   } else if(today.d===1){
     let pm=today.m-1, py=today.y; if(pm<1){pm=12;py--;}
-    zone.innerHTML = `<div class="banner reminder"><div class="b-ico">🏢</div><div><b>OT submission day</b>Go to NEA Banepa office today to submit your OT form for ${MONTH_NAMES[pm-1]} 16–end.</div></div>`;
+    zone.innerHTML += `<div class="banner reminder"><div class="b-ico">🏢</div><div><b>OT submission day</b>Go to NEA Banepa office today to submit your OT form for ${MONTH_NAMES[pm-1]} 16–end.</div></div>`;
+  }
+
+  // 2. Memo Reminder (Triggers on the LAST DAY of the month)
+  const lastDay = daysInMonth(today.y, today.m);
+  if(today.d === lastDay){
+    const entries = entriesCache[today.y] || {};
+    let memoCount = 0;
+    for(let d=1; d<=lastDay; d++){
+      const info = computeDay(today.y, today.m, d, entries, holidaysCache);
+      if(info.memoRequired) memoCount++;
+    }
+    
+    if(memoCount > 0){
+      zone.innerHTML += `
+      <div class="banner" style="background:var(--memo-bg); border-color:var(--memo); color:var(--memo); border-width:2px;">
+        <div class="b-ico">⚠️</div>
+        <div>
+          <b>${memoCount} Memo(s) Pending for ${MONTH_NAMES[today.m-1]}</b>
+          Prepare your attendance memo today and submit it to HR tomorrow (the 1st)!
+        </div>
+      </div>`;
+    }
   }
 }
 
@@ -834,6 +883,7 @@ async function renderCalendar(){
     const cell = document.createElement('div');
     let cls='cell';
     if(info.isLeave) cls+=' leave';
+      else if(info.memoRequired) cls+=' memo';
     else if(info.isHoliday) cls+=' holiday';
     else if(info.isWeekend) cls+=' '+(info.isSaturday?'sat':'sun');
     if(viewY===today.y && viewM===today.m && d===today.d) cls+=' today';
@@ -920,6 +970,7 @@ async function openDaySheet(y,m,d){
   updateNormalComputed();
   updateWeekendComputed();
   document.getElementById('dayOverlay').classList.add('open');
+  document.getElementById('memoFilledToggle').checked = !!entry.memoFilled;
 }
 function updateWeekendComputed(){
   const actual = parseFloat(document.getElementById('weekendHours').value);
@@ -990,7 +1041,8 @@ document.getElementById('saveDayBtn').onclick = async ()=>{
     }
   }
   entry.note = document.getElementById('dayNote').value;
-  entry._serverTimestamp = Date.now();//Add a timestamp to the entry
+  entry.memoFilled = document.getElementById('memoFilledToggle').checked;
+  entry._serverTimestamp = Date.now();//Add timestamp to entry
 
   const hasContent = entry.isLeave || entry.inTime || entry.outTime || entry.workedWeekend || entry.weekendHours || entry.workedHoliday || entry.note;
   if(hasContent){ entries[key]=entry; } else { delete entries[key]; }
