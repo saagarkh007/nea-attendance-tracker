@@ -794,6 +794,8 @@ if(entry.memoFilled) memoRequired = false;
 
 result.memoRequired = memoRequired;
 result.memoFilled = !!entry.memoFilled;
+    // FOR DEBUGGING — REMOVE LATER
+  console.log('Memo check for', y, m, d, '→ memoRequired:', memoRequired, '| entry:', entry);
     return result;
   }
   if(isHoliday){
