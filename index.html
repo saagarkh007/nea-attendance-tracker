@@ -758,6 +758,7 @@ function computeDay(y,m,d,entries,holidays){
   const key = m+'-'+d;
   const hkey = y+'-'+m+'-'+d;
   const entry = entries[key] || {};
+const isBlankDay = Object.keys(entry).length === 0;
   const holidayName = holidays[hkey];
   const isSaturday = dow===6;
   const isSunday = dow===0;
@@ -774,13 +775,19 @@ function computeDay(y,m,d,entries,holidays){
       result.actualWeekendHours = Math.max(0, parseFloat(weekendHours)||0);
       result.otHours = Math.min(result.actualWeekendHours, Number(settings.satCap)||7);
     }
-    // --- MEMO LOGIC ---
+    
+// --- MEMO LOGIC ---
 let memoRequired = false;
 if(!result.isLeave && !result.isWeekend && !result.isHoliday){
-  const hasIn = entry.inTime && entry.inTime.trim() !== '';
-  const hasOut = entry.outTime && entry.outTime.trim() !== '';
-  if(!hasIn || !hasOut){
-    memoRequired = true;
+  // Check if the day is completely blank (no entry)
+  if(isBlankDay){
+    memoRequired = true;  // Blank days REQUIRE a memo
+  } else {
+    const hasIn = entry.inTime && entry.inTime.trim() !== '';
+    const hasOut = entry.outTime && entry.outTime.trim() !== '';
+    if(!hasIn || !hasOut){
+      memoRequired = true;
+    }
   }
 }
 if(entry.memoFilled) memoRequired = false;
@@ -1044,7 +1051,7 @@ document.getElementById('saveDayBtn').onclick = async ()=>{
   entry.memoFilled = document.getElementById('memoFilledToggle').checked;
   entry._serverTimestamp = Date.now();//Add timestamp to entry
 
-  const hasContent = entry.isLeave || entry.inTime || entry.outTime || entry.workedWeekend || entry.weekendHours || entry.workedHoliday || entry.note;
+  const hasContent = entry.isLeave || entry.inTime || entry.outTime || entry.workedWeekend || entry.weekendHours || entry.workedHoliday || entry.note || entry.memoFilled;
   if(hasContent){ entries[key]=entry; } else { delete entries[key]; }
   entriesCache[y]=entries;
   await saveEntries(y);
